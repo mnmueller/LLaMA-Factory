@@ -70,6 +70,9 @@ class DataArguments:
     cache_path: Optional[str] = field(
         default=None, metadata={"help": "Path to save or load the preprocessed datasets."}
     )
+    preprocessing_bs: Optional[int] = field(
+        default=1000, metadata={"help": "Batch size for dataset preprocessing. Larger batches drop less data but will be slower."}
+    )
 
     def __post_init__(self):
         if self.reserved_label_len >= self.cutoff_len:
