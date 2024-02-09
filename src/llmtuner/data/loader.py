@@ -176,6 +176,8 @@ def get_dataset(
 
         dataset = dataset.map(preprocess_func, batched=True, remove_columns=column_names, batch_size=data_args.preprocessing_bs, **kwargs)
 
+        print(f"Dataset length: {len(dataset)}")
+
         if data_args.cache_path is not None and not os.path.exists(data_args.cache_path):
             if training_args.should_save:
                 dataset.save_to_disk(data_args.cache_path)
