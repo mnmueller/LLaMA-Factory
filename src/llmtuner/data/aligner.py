@@ -40,6 +40,48 @@ def convert_alpaca(examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr") 
     return outputs
 
 
+def convert_capybara(examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr") -> Dict[str, List[Any]]:
+    outputs = {"prompt": [], "response": [], "system": [], "tools": []}
+    tag_mapping = {
+        dataset_attr.user_tag: Role.USER,
+        dataset_attr.assistant_tag: Role.ASSISTANT,
+        dataset_attr.observation_tag: Role.OBSERVATION,
+        dataset_attr.function_tag: Role.FUNCTION,
+        dataset_attr.system_tag: Role.SYSTEM,
+    }
+
+    n_valid_tags = sum(getattr(dataset_attr, tag) is not None for tag in ["user_tag", "system_tag", "assistant_tag"])
+    for i, messages in enumerate(examples[dataset_attr.messages]):
+        prompt = []
+        response = []
+
+        n_sys = 0
+        for turn_idx, message in enumerate(messages):
+            if dataset_attr.system_tag and dataset_attr.system_tag in message.keys():
+                assert n_sys == 0, "Multiple system messages encountered"
+                outputs["system"].append(message[dataset_attr.content_tag])
+                n_sys = 1
+
+            if dataset_attr.user_tag in message.keys():
+                    prompt.append(
+                    {"role": tag_mapping[dataset_attr.user_tag], "content": message[dataset_attr.user_tag]}
+                )
+
+            if dataset_attr.assistant_tag in message.keys():
+                    prompt.append(
+                    {"role": tag_mapping[dataset_attr.assistant_tag], "content": message[dataset_attr.assistant_tag]}
+                )
+
+        last_message = prompt.pop(-1)
+        response.append(last_message)
+        outputs["prompt"].append(prompt)
+        outputs["response"].append(response)
+        if n_sys == 0:
+            outputs["system"].append(examples[dataset_attr.system][i] if dataset_attr.system else "")
+        outputs["tools"].append(examples[dataset_attr.tools][i] if dataset_attr.tools else "")
+
+    return outputs
+
 def convert_sharegpt(examples: Dict[str, List[Any]], dataset_attr: "DatasetAttr") -> Dict[str, List[Any]]:
     outputs = {"prompt": [], "response": [], "system": [], "tools": []}
     tag_mapping = {

@@ -367,5 +367,17 @@
       "prompt": "content"
     },
     "folder": "python"
+  },
+  "capybara-bg": {
+  "hf_hub_url": "INSAIT-Institute/Capybara-bg",
+  "subset": "default",
+  "formatting": "sharegpt",
+  "columns": {
+    "messages": "conversation"
+  },
+  "tags": {
+    "user_tag": "input",
+    "assistant_tag": "output"
+  }
   }
 }
