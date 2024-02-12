@@ -133,3 +133,30 @@ def load_model_and_tokenizer(
         logger.info("This IS expected that the trainable params is 0 if you are using model for inference only.")
 
     return model, tokenizer
+
+def load_tokenizer(
+    model_args: "ModelArguments",
+) -> PreTrainedTokenizer:
+    r"""
+    Loads pretrained tokenizer.
+    """
+
+    try_download_model_from_ms(model_args)
+
+    config_kwargs = {
+        "trust_remote_code": True,
+        "cache_dir": model_args.cache_dir,
+        "revision": model_args.model_revision,
+        "token": model_args.hf_hub_token,
+    }
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_args.model_name_or_path,
+        use_fast=model_args.use_fast_tokenizer,
+        split_special_tokens=model_args.split_special_tokens,
+        padding_side="right",
+        **config_kwargs,
+    )
+    patch_tokenizer(tokenizer)
+
+    return tokenizer
