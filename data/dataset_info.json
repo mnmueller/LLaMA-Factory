@@ -368,6 +368,13 @@
     },
     "folder": "python"
   },
+  "parlamint-bg": {
+  "hf_hub_url": "INSAIT-Institute/Parlamint-bg",
+  "subset": "default",
+  "columns": {
+    "prompt": "text"
+  }
+  },
   "capybara-bg": {
   "hf_hub_url": "INSAIT-Institute/Capybara-bg",
   "subset": "default",
