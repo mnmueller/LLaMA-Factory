@@ -1,8 +1,9 @@
 import inspect
 import os
 from typing import TYPE_CHECKING, List, Literal, Union
+import numpy as np
 
-from datasets import concatenate_datasets, interleave_datasets, load_dataset, load_from_disk
+from datasets import concatenate_datasets, interleave_datasets, load_dataset, load_from_disk, DatasetDict, Dataset
 
 from ..extras.constants import FILEEXT2TYPE
 from ..extras.logging import get_logger
@@ -11,7 +12,7 @@ from .parser import get_dataset_list
 from .preprocess import get_preprocess_and_print_func
 from .template import get_template_and_fix_tokenizer
 from .utils import checksum
-
+import joblib
 
 if TYPE_CHECKING:
     from datasets import Dataset, IterableDataset
@@ -150,6 +151,10 @@ def get_dataset(
     if data_args.cache_path is not None:
         if os.path.exists(data_args.cache_path):
             logger.warning("Loading dataset from disk will ignore other data arguments.")
+
+            if len([x for x in os.listdir(data_args.cache_path) if x.endswith("bin")])>0:
+                return sequence_packing(data_args.cache_path, data_args.cutoff_len)
+
             dataset = load_from_disk(data_args.cache_path)
             if data_args.streaming:
                 dataset = dataset.to_iterable_dataset()
@@ -188,3 +193,45 @@ def get_dataset(
                 raise RuntimeError("Empty dataset!")
 
         return dataset
+
+
+def memmap_iterator(data: np.memmap, full_length: int, context_length: int):
+    end_index = int(full_length / context_length)
+    for idx in range(end_index):
+        yield {"input_ids": data[idx * context_length: (idx + 1) * context_length]}
+
+
+def sequence_packing(
+        data_folder: str,
+        context_length: int,
+):
+    ds_dict = DatasetDict()
+    num_proc = max(joblib.cpu_count() - 4, 1)
+
+    for split_file_path in [x for x in os.listdir(data_folder) if x.endswith("bin")]:
+        split_file_name = split_file_path.split("/")[-1]
+        split_name = split_file_name.split("_")[0]
+
+        if int(split_file_name.split(".")[0][-2:]) == 16:
+            dtype = np.uint16
+        elif int(split_file_name.split(".")[0][-2:]) == 32:
+            dtype = np.uint32
+        else:
+            assert False, "could not read dataset"
+
+        data_split = np.memmap(os.path.join(data_folder, split_file_path), dtype=dtype, mode="r")
+        arr_len = len(data_split)
+
+        ds = Dataset.from_generator(
+            memmap_iterator,
+            gen_kwargs={
+                "data": data_split,
+                "full_length": arr_len,
+                "context_length": context_length,
+            },
+            cache_dir= os.path.join(data_folder, ".cache"),
+            num_proc=num_proc,
+        )
+        ds_dict[split_name] = ds
+
+    return ds_dict
