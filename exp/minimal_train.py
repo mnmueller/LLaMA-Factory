@@ -208,6 +208,7 @@ def train(
         optim=optim,
         num_train_epochs=1,
         save_steps=save_steps,
+        eval_steps=-1,
         bf16=compute_dtype==torch.bfloat16,
         fp16=compute_dtype==torch.float16,
         deepspeed=deepspeed_config,
