@@ -9,19 +9,11 @@
 #SBATCH --error=./runs/%x-%j.err           # output file name
 ref_dir=$PWD
 
-if ! conda env list | grep "mixtralLF" >/dev/null 2>&1; then
-  conda env create -f LF_mixtral_ft_env.yml
-fi
-
 source ~/miniconda3/etc/profile.d/conda.sh
 
 conda activate mixtralLF
 
 echo $CONDA_DEFAULT_ENV
-
-cd ./LLaMA-Factory
-pip install -r requirements.txt
-cd $ref_dir
 
 export HF_TOKEN=$(< ~/.ssh/hf_token)
 export HF_DATASETS_IN_MEMORY_MAX_SIZE=274877906944

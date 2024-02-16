@@ -9,10 +9,6 @@
 #SBATCH --error=./runs/%x-%j.err           # output file name
 ref_dir=$PWD
 
-if ! conda env list | grep "mixtralLF" >/dev/null 2>&1; then
-  conda env create -f LF_mixtral_ft_env.yml
-fi
-
 source ~/miniconda3/etc/profile.d/conda.sh
 
 conda activate mixtralLF
