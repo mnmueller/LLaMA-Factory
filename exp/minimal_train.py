@@ -153,7 +153,7 @@ def sequence_packing(
 def load_data(dataset_path: Path, context_length):
     ds_dict = sequence_packing(dataset_path, context_length)
 
-    return ds_dict["train"], ds_dict["val"]
+    return ds_dict["train"], ds_dict["val"] if "val" in ds_dict.keys() else None
 
 def train(
     root_dir: str,
@@ -221,7 +221,6 @@ def train(
         args=args,
         data_collator=data_collator,
         train_dataset=train_dataset,
-        eval_dataset=val_dataset,
     )
 
     trainer.train()
