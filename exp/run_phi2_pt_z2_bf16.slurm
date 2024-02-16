@@ -62,5 +62,5 @@ srun --jobid "$SLURM_JOBID" \
     --num_train_epochs 1.0 \
     --report_to wandb \
     --bf16 \
-    --dataset_dir ./LLaMA-Factory/data \
+    --dataset_dir ../data \
     --cutoff_len 2048'

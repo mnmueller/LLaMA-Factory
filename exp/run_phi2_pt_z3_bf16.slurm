@@ -59,5 +59,5 @@ srun --jobid "$SLURM_JOBID" \
     --report_to wandb \
     --bf16 \
     --flash_attn \
-    --dataset_dir ./LLaMA-Factory/data \
+    --dataset_dir ../data \
     --cutoff_len 2048'
