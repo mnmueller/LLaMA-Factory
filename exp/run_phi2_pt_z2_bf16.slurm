@@ -41,6 +41,6 @@ huggingface-cli login --token $HF_TOKEN
 srun --jobid "$SLURM_JOBID" \
     bash -c 'torchrun --nproc_per_node "$GPUS_PER_NODE" --nnodes "$SLURM_NNODES" --node_rank "$SLURM_PROCID" \
     --master_addr "$MASTER_ADDR" --master_port "$MASTER_PORT" \
-    ./LLaMA-Factory/exp/minimal_train.py \
+    minimal_train.py \
     --deepspeed zero2_bf16.json\
     --bf16'

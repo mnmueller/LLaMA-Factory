@@ -51,10 +51,9 @@ def parse_arguments():
         "--context_length", type=int, default=2048, help="Context length"
     )
     parser.add_argument(
-        "--batch_size",
+        "--gradient_accumulation_steps",
         type=int,
-        default=512,
-        help="Global batch size.",
+        default=1,
     )
     parser.add_argument(
         "--per_gpu_batch_size",
@@ -157,8 +156,7 @@ def train(
     context_length: int,
     deepspeed_config: str,
     optim: str,
-    num_gpus: int,
-    batch_size: int = 512,
+    gradient_accumulation_steps: int,
     per_gpu_batch_size: int = 4,
     log_steps: int = 1,
     save_steps: int = 500,
@@ -195,7 +193,7 @@ def train(
         per_device_eval_batch_size=per_gpu_batch_size,
         evaluation_strategy="steps",
         logging_steps=log_steps,
-        gradient_accumulation_steps=int(batch_size / (per_gpu_batch_size * num_gpus)),
+        gradient_accumulation_steps=gradient_accumulation_steps,
         adam_beta1=0.9,
         adam_beta2=0.95,
         weight_decay=0.05,
@@ -233,8 +231,7 @@ if __name__ == "__main__":
         context_length=args.context_length,
         deepspeed_config=args.deepspeed_config,
         optim=args.optim,
-        num_gpus=args.num_gpus,
-        batch_size=args.batch_size,
+        gradient_accumulation_steps=args.gradient_accumulation_steps,
         per_gpu_batch_size=args.per_gpu_batch_size,
         log_steps=args.log_steps,
         save_steps=args.save_steps,
