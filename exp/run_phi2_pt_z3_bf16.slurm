@@ -9,11 +9,19 @@
 #SBATCH --error=./runs/%x-%j.err           # output file name
 ref_dir=$PWD
 
+if ! conda env list | grep "mixtralLF" >/dev/null 2>&1; then
+  conda env create -f LF_mixtral_ft_env.yml
+fi
+
 source ~/miniconda3/etc/profile.d/conda.sh
 
-conda activate debugZ3
+conda activate mixtralLF
 
 echo $CONDA_DEFAULT_ENV
+
+cd ./LLaMA-Factory
+pip install -r requirements.txt
+cd $ref_dir
 
 export HF_TOKEN=$(< ~/.ssh/hf_token)
 export HF_DATASETS_IN_MEMORY_MAX_SIZE=274877906944
@@ -41,6 +49,23 @@ huggingface-cli login --token $HF_TOKEN
 srun --jobid "$SLURM_JOBID" \
     bash -c 'torchrun --nproc_per_node "$GPUS_PER_NODE" --nnodes "$SLURM_NNODES" --node_rank "$SLURM_PROCID" \
     --master_addr "$MASTER_ADDR" --master_port "$MASTER_PORT" \
-    minimal_train.py \
-    --deepspeed zero3_bf16.json\
-    --bf16'
+    LF_train.py \
+    --deepspeed zero3_aa.json \
+    --stage pt \
+    --do_train \
+    --model_name_or_path microsoft/phi-2 \
+    --dataset wiki_demo \
+    --finetuning_type full \
+    --output_dir ./runs/debug_$SLURM_JOBID \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 2 \
+    --lr_scheduler_type cosine \
+    --logging_step 1 \
+    --learning_rate 1e-5 \
+    --warmup_steps 100 \
+    --num_train_epochs 1.0 \
+    --report_to wandb \
+    --bf16 \
+    --flash_attn \
+    --dataset_dir ./LLaMA-Factory/data \
+    --cutoff_len 2048'

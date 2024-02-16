@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=phi_2_wiki_z2      # name
+#SBATCH --job-name=phi_2_wiki_z3_bf16      # name
 #SBATCH --nodes=1                   # nodes
 #SBATCH --ntasks-per-node=1          # crucial - only 1 task per dist per node!
 #SBATCH --cpus-per-task=128          # number of cores per tasks
@@ -9,20 +9,11 @@
 #SBATCH --error=./runs/%x-%j.err           # output file name
 ref_dir=$PWD
 
-if ! conda env list | grep "mixtralLF" >/dev/null 2>&1; then
-  conda env create -f LF_mixtral_ft_env.yml
-fi
-
 source ~/miniconda3/etc/profile.d/conda.sh
 
-conda activate mixtralLF
+conda activate debugZ3
 
 echo $CONDA_DEFAULT_ENV
-
-cd ./LLaMA-Factory
-pip install -r requirements.txt
-export PYTHON_PATH=$PYTHON_PATH:$PWD
-cd $ref_dir
 
 export HF_TOKEN=$(< ~/.ssh/hf_token)
 export HF_DATASETS_IN_MEMORY_MAX_SIZE=274877906944
@@ -31,6 +22,7 @@ export WANDB_PROJECT="bg_mixtral"
 
 export CUDA_HOME=/usr/local/cuda
 export LD_LIBRARY_PATH=/usr/local/cuda/lib64
+export PYTHON_PATH=$PYTHON_PATH:$ref_dir
 echo $CUDA_HOME
 
 export GPUS_PER_NODE=8
@@ -49,22 +41,6 @@ huggingface-cli login --token $HF_TOKEN
 srun --jobid "$SLURM_JOBID" \
     bash -c 'torchrun --nproc_per_node "$GPUS_PER_NODE" --nnodes "$SLURM_NNODES" --node_rank "$SLURM_PROCID" \
     --master_addr "$MASTER_ADDR" --master_port "$MASTER_PORT" \
-    LF_train.py \
-    --deepspeed zero2_bf16.json \
-    --stage pt \
-    --do_train \
-    --model_name_or_path microsoft/phi-2 \
-    --dataset wiki_demo \
-    --finetuning_type full \
-    --output_dir ./runs/debug_$SLURM_JOBID \
-    --per_device_train_batch_size 4 \
-    --gradient_accumulation_steps 2 \
-    --lr_scheduler_type cosine \
-    --logging_step 1 \
-    --learning_rate 1e-5 \
-    --warmup_steps 100 \
-    --num_train_epochs 1.0 \
-    --report_to wandb \
-    --bf16 \
-    --dataset_dir ./LLaMA-Factory/data \
-    --cutoff_len 2048'
+    minimal_train.py \
+    --deepspeed zero2_bf16.json\
+    --bf16'
