@@ -42,6 +42,12 @@ def parse_arguments():
         help="Root directory",
     )
     parser.add_argument(
+        "--data_file",
+        type=str,
+        default="Parlamint-bg_tok_phi-2",
+        help="Root directory",
+    )
+    parser.add_argument(
         "--model",
         type=str,
         default="microsoft/phi-2",
@@ -157,6 +163,7 @@ def train(
     deepspeed_config: str,
     optim: str,
     gradient_accumulation_steps: int,
+    data_file: str,
     per_gpu_batch_size: int = 4,
     log_steps: int = 1,
     save_steps: int = 500,
@@ -171,7 +178,7 @@ def train(
     tokenizer.pad_token = tokenizer.unk_token
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
-    train_dataset, val_dataset = load_data(DATA_ROOT, context_length)
+    train_dataset, val_dataset = load_data(DATA_ROOT / data_file, context_length)
 
     print(f"Zero3 enabled: {is_deepspeed_zero3_enabled()}")
     config = AutoConfig.from_pretrained(model_name)
@@ -228,6 +235,7 @@ if __name__ == "__main__":
     train(
         root_dir=args.root,
         model_name=args.model,
+        data_file=args.data_file,
         context_length=args.context_length,
         deepspeed_config=args.deepspeed_config,
         optim=args.optim,
