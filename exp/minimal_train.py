@@ -63,7 +63,7 @@ def parse_arguments():
     parser.add_argument(
         "--per_gpu_batch_size",
         type=int,
-        default=2,
+        default=1,
         help="Batch size per GPU. Try to maximize this.",
     )
     parser.add_argument(
