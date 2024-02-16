@@ -10,7 +10,6 @@ import joblib
 
 from transformers.integrations import is_deepspeed_zero3_enabled
 
-from torch.utils.data import Dataset
 from transformers import (
     LlamaForCausalLM,
     MistralForCausalLM,
@@ -20,7 +19,7 @@ from transformers import (
     AutoConfig
 )
 
-from datasets import DatasetDict
+from datasets import DatasetDict, Dataset
 
 from transformers import DataCollatorForLanguageModeling
 from transformers import Trainer, TrainingArguments
