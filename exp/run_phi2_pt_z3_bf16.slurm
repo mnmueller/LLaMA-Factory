@@ -42,7 +42,7 @@ srun --jobid "$SLURM_JOBID" \
     bash -c 'torchrun --nproc_per_node "$GPUS_PER_NODE" --nnodes "$SLURM_NNODES" --node_rank "$SLURM_PROCID" \
     --master_addr "$MASTER_ADDR" --master_port "$MASTER_PORT" \
     LF_train.py \
-    --deepspeed zero3_aa.json \
+    --deepspeed zero3_bf16.json \
     --stage pt \
     --do_train \
     --model_name_or_path microsoft/phi-2 \
