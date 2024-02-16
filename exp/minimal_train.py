@@ -223,6 +223,7 @@ def train(
         args=args,
         data_collator=data_collator,
         train_dataset=train_dataset,
+        eval_dataset=train_dataset,
     )
 
     trainer.train()
