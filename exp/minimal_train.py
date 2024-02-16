@@ -53,7 +53,7 @@ def parse_arguments():
         help="HuggingFace model to load",
     )
     parser.add_argument(
-        "--context_length", type=int, default=2048, help="Context length"
+        "--context_length", type=int, default=1024, help="Context length"
     )
     parser.add_argument(
         "--gradient_accumulation_steps",
@@ -182,13 +182,13 @@ def train(
     print(f"Zero3 enabled: {is_deepspeed_zero3_enabled()}")
     config = AutoConfig.from_pretrained(model_name)
 
-    print(config)
+    print("Model Config:\n", config)
 
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         config=config,
         torch_dtype=compute_dtype,
-        use_flash_attention_2 = use_flash_attention_2,
+        use_flash_attention_2=use_flash_attention_2,
         low_cpu_mem_usage=(not is_deepspeed_zero3_enabled()),
     )
 
@@ -214,6 +214,8 @@ def train(
         report_to="wandb",
         run_name=model_name + "-test",  # name of the W&B run (optional)
     )
+
+    print("Train Args:\n", args)
 
     trainer = Trainer(
         model=model,
