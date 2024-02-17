@@ -16,17 +16,17 @@ from llmtuner.model import load_model_and_tokenizer
 
 
 def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["TrainerCallback"]] = None):
+    model, tokenizer = load_model_and_tokenizer()
+
     model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
     callbacks = [LogCallback()] if callbacks is None else callbacks
 
-    run_pt(model_args, data_args, training_args, finetuning_args, callbacks)
+    run_pt(model_args, data_args, training_args, finetuning_args, model, tokenizer, callbacks)
 
 
 def load_model_and_tokenizer(
-    model_args: "ModelArguments",
-    finetuning_args: "FinetuningArguments",
-    is_trainable: Optional[bool] = False,
-    add_valuehead: Optional[bool] = False,
+    model_name_or_path="microsoft/phi-2",
+    compute_dtype=torch.bfloat16,
 ) -> Tuple["PreTrainedModel", "PreTrainedTokenizer"]:
     r"""
     Loads pretrained model and tokenizer.
@@ -36,29 +36,29 @@ def load_model_and_tokenizer(
 
     # try_download_model_from_ms(model_args)
 
-    config_kwargs = {
-        "trust_remote_code": True,
-        "cache_dir": model_args.cache_dir,
-        "revision": model_args.model_revision,
-        "token": model_args.hf_hub_token,
-    }
+    config_kwargs = {}
+    #     "trust_remote_code": True,
+    #     "cache_dir": model_args.cache_dir,
+    #     "revision": model_args.model_revision,
+    #     "token": model_args.hf_hub_token,
+    # }
 
     tokenizer = AutoTokenizer.from_pretrained(
-        model_args.model_name_or_path,
-        use_fast=model_args.use_fast_tokenizer,
-        split_special_tokens=model_args.split_special_tokens,
+        model_name_or_path,
+        use_fast=False,
+        split_special_tokens=False,
         padding_side="right",
         **config_kwargs,
     )
     # patch_tokenizer(tokenizer)
 
-    config = AutoConfig.from_pretrained(model_args.model_name_or_path, **config_kwargs)
+    config = AutoConfig.from_pretrained(model_name_or_path, **config_kwargs)
     # patch_config(config, tokenizer, model_args, config_kwargs, is_trainable)
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_args.model_name_or_path,
+        model_name_or_path,
         config=config,
-        torch_dtype=model_args.compute_dtype,
+        torch_dtype=compute_dtype,
         low_cpu_mem_usage=(not is_deepspeed_zero3_enabled()),
         **config_kwargs,
     )
@@ -78,9 +78,11 @@ def run_pt(
     data_args: "DataArguments",
     training_args: "Seq2SeqTrainingArguments",
     finetuning_args: "FinetuningArguments",
+    model,
+    tokenizer,
     callbacks: Optional[List["TrainerCallback"]] = None,
+
 ):
-    model, tokenizer = load_model_and_tokenizer(model_args, finetuning_args, training_args.do_train)
     dataset = get_dataset(tokenizer, model_args, data_args, training_args, stage="pt")
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
