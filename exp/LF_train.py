@@ -26,8 +26,6 @@ def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["Tra
 
 
 def load_model_and_tokenizer(
-    model_name_or_path="microsoft/phi-2",
-    compute_dtype=torch.bfloat16,
 ) -> Tuple["PreTrainedModel", "PreTrainedTokenizer"]:
     r"""
     Loads pretrained model and tokenizer.
@@ -35,39 +33,21 @@ def load_model_and_tokenizer(
     Support both training and inference.
     """
 
-    # try_download_model_from_ms(model_args)
-
-    config_kwargs = {}
-    #     "trust_remote_code": True,
-    #     "cache_dir": model_args.cache_dir,
-    #     "revision": model_args.model_revision,
-    #     "token": model_args.hf_hub_token,
-    # }
-
     tokenizer = AutoTokenizer.from_pretrained(
-        model_name_or_path,
+        "microsoft/phi-2",
         use_fast=False,
         split_special_tokens=False,
         padding_side="right",
-        **config_kwargs,
     )
-    # patch_tokenizer(tokenizer)
 
-    config = AutoConfig.from_pretrained(model_name_or_path, **config_kwargs)
-    # patch_config(config, tokenizer, model_args, config_kwargs, is_trainable)
+    # config = AutoConfig.from_pretrained(model_name_or_path)
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_name_or_path,
-        config=config,
-        torch_dtype=compute_dtype,
+        "microsoft/phi-2",
+        # config=config,
+        torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True,
-        **config_kwargs,
     )
-
-    # patch_model(model, tokenizer, model_args, is_trainable)
-    # register_autoclass(config, model, tokenizer)
-    #
-    # model = init_adapter(model, model_args, finetuning_args, is_trainable)
 
     model.train()
 
