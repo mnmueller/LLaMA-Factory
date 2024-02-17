@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import torch
-from transformers import PreTrainedModel
+from transformers import PreTrainedModel, set_seed
 from transformers.integrations import is_deepspeed_zero3_enabled
 from transformers import DataCollatorForLanguageModeling, Trainer, AutoModelForCausalLM, AutoTokenizer, AutoConfig
 import sys
@@ -15,7 +15,9 @@ from llmtuner.data import get_dataset, split_dataset
 from llmtuner.model import load_model_and_tokenizer
 
 
+
 def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["TrainerCallback"]] = None):
+    set_seed(42)
     model, tokenizer = load_model_and_tokenizer()
 
     model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
@@ -43,15 +45,9 @@ def load_model_and_tokenizer(
 
     model = AutoModelForCausalLM.from_pretrained(
         "microsoft/phi-2",
-        # config=config,
         torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=False,
     )
-
-    config = AutoConfig.from_pretrained("microsoft/phi-2")
-
-    print("Config:", config)
-
 
     model.train()
 
