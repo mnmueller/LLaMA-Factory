@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import torch
-from transformers import PreTrainedModel, set_seed
+from transformers import PreTrainedModel, set_seed, Seq2SeqTrainingArguments, HfArgumentParser
 from transformers.integrations import is_deepspeed_zero3_enabled
 from transformers import DataCollatorForLanguageModeling, Trainer, AutoModelForCausalLM, AutoTokenizer, AutoConfig
 import sys
@@ -14,14 +14,20 @@ from llmtuner.hparams import get_infer_args, get_train_args
 from llmtuner.data import get_dataset, split_dataset
 from llmtuner.model import load_model_and_tokenizer
 
+from llmtuner.hparams.data_args import DataArguments
+from llmtuner.hparams.finetuning_args import FinetuningArguments
+from llmtuner.hparams.generating_args import GeneratingArguments
+from llmtuner.hparams.model_args import ModelArguments
 
+
+
+_TRAIN_ARGS = [ModelArguments, DataArguments, Seq2SeqTrainingArguments, FinetuningArguments, GeneratingArguments]
 
 def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["TrainerCallback"]] = None):
-    set_seed(42)
+    HfArgumentParser(_TRAIN_ARGS)
     model, tokenizer = load_model_and_tokenizer()
 
     model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
-
 
     callbacks = [LogCallback()] if callbacks is None else callbacks
 
