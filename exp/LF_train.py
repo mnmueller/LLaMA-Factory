@@ -14,7 +14,7 @@ sys.path.insert(0, "../src")
 from llmtuner.extras.logging import get_logger
 from llmtuner.extras.callbacks import LogCallback
 from llmtuner.hparams import get_infer_args, get_train_args
-from llmtuner.hparams.parser import _verify_model_args, _set_transformers_logging, _parse_train_args
+from llmtuner.hparams.parser import _verify_model_args, _set_transformers_logging, _parse_train_args, _parse_args
 from llmtuner.data import get_dataset, split_dataset
 from llmtuner.model import load_model_and_tokenizer
 
@@ -29,9 +29,12 @@ logger = get_logger(__name__)
 _TRAIN_ARGS = [ModelArguments, DataArguments, Seq2SeqTrainingArguments, FinetuningArguments, GeneratingArguments]
 
 def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["TrainerCallback"]] = None):
-    model_args, data_args, training_args, finetuning_args, generating_args = _parse_train_args(args)
+    parser = HfArgumentParser(_TRAIN_ARGS)
 
     model, tokenizer = load_model_and_tokenizer()
+
+    model_args, data_args, training_args, finetuning_args, generating_args = _parse_args(parser, args)
+
 
     _verify_model_args(model_args, finetuning_args)
 
