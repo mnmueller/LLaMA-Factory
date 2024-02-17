@@ -37,6 +37,9 @@ def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["Tra
 
     _verify_model_args(model_args, finetuning_args)
 
+    model, tokenizer = load_model_and_tokenizer()
+
+
     # postprocess training_args
     if (
         training_args.local_rank != -1
@@ -91,7 +94,6 @@ def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["Tra
     )
     logger.info(f"Training/evaluation parameters {training_args}")
 
-    model, tokenizer = load_model_and_tokenizer()
 
     # Set seed before initializing model.
     set_seed(training_args.seed)
