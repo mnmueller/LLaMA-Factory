@@ -60,4 +60,4 @@ srun --jobid "$SLURM_JOBID" \
     --bf16 \
     --flash_attn \
     --dataset_dir ../data \
-    --cutoff_len 2048'
+    --cutoff_len 512'
