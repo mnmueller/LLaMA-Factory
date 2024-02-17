@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import torch
 from transformers import PreTrainedModel
-from transformers import DataCollatorForLanguageModeling, Trainer
+from transformers.integrations import is_deepspeed_zero3_enabled
+from transformers import DataCollatorForLanguageModeling, Trainer, AutoModelForCausalLM, AutoTokenizer, AutoConfig
 import sys
 
 sys.path.insert(0, "../src")
@@ -19,6 +20,58 @@ def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["Tra
     callbacks = [LogCallback()] if callbacks is None else callbacks
 
     run_pt(model_args, data_args, training_args, finetuning_args, callbacks)
+
+
+def load_model_and_tokenizer(
+    model_args: "ModelArguments",
+    finetuning_args: "FinetuningArguments",
+    is_trainable: Optional[bool] = False,
+    add_valuehead: Optional[bool] = False,
+) -> Tuple["PreTrainedModel", "PreTrainedTokenizer"]:
+    r"""
+    Loads pretrained model and tokenizer.
+
+    Support both training and inference.
+    """
+
+    # try_download_model_from_ms(model_args)
+
+    config_kwargs = {
+        "trust_remote_code": True,
+        "cache_dir": model_args.cache_dir,
+        "revision": model_args.model_revision,
+        "token": model_args.hf_hub_token,
+    }
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_args.model_name_or_path,
+        use_fast=model_args.use_fast_tokenizer,
+        split_special_tokens=model_args.split_special_tokens,
+        padding_side="right",
+        **config_kwargs,
+    )
+    # patch_tokenizer(tokenizer)
+
+    config = AutoConfig.from_pretrained(model_args.model_name_or_path, **config_kwargs)
+    # patch_config(config, tokenizer, model_args, config_kwargs, is_trainable)
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_args.model_name_or_path,
+        config=config,
+        torch_dtype=model_args.compute_dtype,
+        low_cpu_mem_usage=(not is_deepspeed_zero3_enabled()),
+        **config_kwargs,
+    )
+
+    # patch_model(model, tokenizer, model_args, is_trainable)
+    # register_autoclass(config, model, tokenizer)
+    #
+    # model = init_adapter(model, model_args, finetuning_args, is_trainable)
+
+    model.train()
+
+    return model, tokenizer
+
 
 def run_pt(
     model_args: "ModelArguments",
