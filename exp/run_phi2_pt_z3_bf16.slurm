@@ -49,8 +49,8 @@ srun --jobid "$SLURM_JOBID" \
     --dataset wiki_demo \
     --finetuning_type full \
     --output_dir ./runs/debug_$SLURM_JOBID \
-    --per_device_train_batch_size 4 \
-    --gradient_accumulation_steps 2 \
+    --per_device_train_batch_size 1 \
+    --gradient_accumulation_steps 8 \
     --lr_scheduler_type cosine \
     --logging_step 1 \
     --learning_rate 1e-5 \
