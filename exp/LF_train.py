@@ -91,13 +91,10 @@ def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["Tra
     )
     logger.info(f"Training/evaluation parameters {training_args}")
 
+    model, tokenizer = load_model_and_tokenizer()
+
     # Set seed before initializing model.
     set_seed(training_args.seed)
-
-
-
-
-    model, tokenizer = load_model_and_tokenizer()
 
     # model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
 
