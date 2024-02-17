@@ -31,9 +31,10 @@ _TRAIN_ARGS = [ModelArguments, DataArguments, Seq2SeqTrainingArguments, Finetuni
 def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["TrainerCallback"]] = None):
     parser = HfArgumentParser(_TRAIN_ARGS)
 
+    namespace, remaining_args = parser.parse_known_args(sys.argv[1:])
     model, tokenizer = load_model_and_tokenizer()
 
-    model_args, data_args, training_args, finetuning_args, generating_args = _parse_args(parser, args)
+    model_args, data_args, training_args, finetuning_args, generating_args, _ = parser.parse_args_into_dataclasses(return_remaining_strings=True)
 
 
     _verify_model_args(model_args, finetuning_args)
