@@ -16,9 +16,9 @@ from llmtuner.model import load_model_and_tokenizer
 
 
 def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["TrainerCallback"]] = None):
+    model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
     model, tokenizer = load_model_and_tokenizer()
 
-    model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
     callbacks = [LogCallback()] if callbacks is None else callbacks
 
     run_pt(model_args, data_args, training_args, finetuning_args, model, tokenizer, callbacks)
