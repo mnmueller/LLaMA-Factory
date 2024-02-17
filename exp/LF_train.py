@@ -32,6 +32,10 @@ def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["Tra
     parser = HfArgumentParser(_TRAIN_ARGS)
 
     namespace, remaining_args = parser.parse_known_args(sys.argv[1:])
+
+    for dtype in parser.dataclass_types:
+        keys = {f.name for f in parser.dataclasses.fields(dtype) if f.init}
+
     model, tokenizer = load_model_and_tokenizer()
 
     model_args, data_args, training_args, finetuning_args, generating_args, _ = parser.parse_args_into_dataclasses(return_remaining_strings=True)
