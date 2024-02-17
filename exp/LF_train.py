@@ -14,7 +14,7 @@ sys.path.insert(0, "../src")
 from llmtuner.extras.logging import get_logger
 from llmtuner.extras.callbacks import LogCallback
 from llmtuner.hparams import get_infer_args, get_train_args
-from llmtuner.hparams.parser import _verify_model_args, _set_transformers_logging
+from llmtuner.hparams.parser import _verify_model_args, _set_transformers_logging, _parse_train_args
 from llmtuner.data import get_dataset, split_dataset
 from llmtuner.model import load_model_and_tokenizer
 
@@ -29,8 +29,7 @@ logger = get_logger(__name__)
 _TRAIN_ARGS = [ModelArguments, DataArguments, Seq2SeqTrainingArguments, FinetuningArguments, GeneratingArguments]
 
 def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["TrainerCallback"]] = None):
-    parser = HfArgumentParser(_TRAIN_ARGS)
-    model_args, data_args, training_args, finetuning_args, generating_args = parser.parse_args_into_dataclasses(return_remaining_strings=True)
+    model_args, data_args, training_args, finetuning_args, generating_args = _parse_train_args(args)
 
     # Setup logging
     if training_args.should_log:
@@ -44,6 +43,7 @@ def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["Tra
         and training_args.ddp_find_unused_parameters is None
         and finetuning_args.finetuning_type == "lora"
     ):
+        print("Ping 1")
         logger.warning("`ddp_find_unused_parameters` needs to be set as False for LoRA in DDP training.")
         training_args_dict = training_args.to_dict()
         training_args_dict.update(dict(ddp_find_unused_parameters=False))
@@ -58,6 +58,7 @@ def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["Tra
         and not training_args.overwrite_output_dir
         and can_resume_from_checkpoint
     ):
+        print("Ping 2")
         last_checkpoint = get_last_checkpoint(training_args.output_dir)
         if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 0:
             raise ValueError("Output directory already exists and is not empty. Please set `overwrite_output_dir`.")
@@ -71,17 +72,6 @@ def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["Tra
                     training_args.resume_from_checkpoint
                 )
             )
-
-    if (
-        finetuning_args.stage in ["rm", "ppo"]
-        and finetuning_args.finetuning_type == "lora"
-        and training_args.resume_from_checkpoint is not None
-    ):
-        logger.warning(
-            "Add {} to `adapter_name_or_path` to resume training from checkpoint.".format(
-                training_args.resume_from_checkpoint
-            )
-        )
 
     # postprocess model_args
     model_args.compute_dtype = (
