@@ -24,7 +24,9 @@ from llmtuner.hparams.model_args import ModelArguments
 _TRAIN_ARGS = [ModelArguments, DataArguments, Seq2SeqTrainingArguments, FinetuningArguments, GeneratingArguments]
 
 def run_exp(args: Optional[Dict[str, Any]] = None, callbacks: Optional[List["TrainerCallback"]] = None):
-    HfArgumentParser(_TRAIN_ARGS)
+    parser = HfArgumentParser(_TRAIN_ARGS)
+    parser.parse_args_into_dataclasses(return_remaining_strings=True)
+
     model, tokenizer = load_model_and_tokenizer()
 
     model_args, data_args, training_args, finetuning_args, generating_args = get_train_args(args)
