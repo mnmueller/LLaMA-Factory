@@ -40,14 +40,17 @@ def load_model_and_tokenizer(
         padding_side="right",
     )
 
-    # config = AutoConfig.from_pretrained(model_name_or_path)
-
     model = AutoModelForCausalLM.from_pretrained(
         "microsoft/phi-2",
         # config=config,
         torch_dtype=torch.bfloat16,
-        low_cpu_mem_usage=True,
+        low_cpu_mem_usage=False,
     )
+
+    config = AutoConfig.from_pretrained("microsoft/phi-2")
+
+    print("Config:", config)
+
 
     model.train()
 
